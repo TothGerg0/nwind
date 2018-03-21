@@ -37,6 +37,7 @@ FROM vevõk
 SELECT termékek.Kategóriakód, COUNT(Kifutott), AVG(Egységár)
 
 FROM termékek
+  WHERE Kifutott = 1
   GROUP BY Kategóriakód;
 
 /*7.	Határozza meg országonként és városonként a vevõk számát!*/
@@ -46,14 +47,16 @@ FROM rendelések
 
 
 /*8.	Listázza ki csökkenõ sorrendben azt a 10 vevõt, akik a legtöbb pénzt hagyták a kasszában?*/
-SELECT Vevõkód, SUM(Egységár*Mennyiség) AS Pénz
-
+SELECT Cégnév,
+  SUM(Egységár * Mennyiség * (1 - Engedmény)) AS Pénz
 FROM `rendelés részletei`
   INNER JOIN rendelések
     ON `rendelés részletei`.Rendeléskód = rendelések.Rendeléskód
-  GROUP BY Vevõkód
-  ORDER BY Pénz DESC
-  LIMIT 10;
+  INNER JOIN vevõk
+    ON rendelések.Vevõkód = vevõk.Vevõkód
+  GROUP BY Cégnév
+ORDER BY Pénz DESC
+LIMIT 10;
 
 /*9.	Határozza meg az évenkénti rendelések számát!*/
 SELECT
@@ -124,6 +127,17 @@ SELECT Termékkód, Terméknév
   WHERE Terméknév ='Aniseed Syrup');
 
 /*17.	Kik azok az üzletkötõk, akik az igazgatóknál és az alelnököknél is idõsebbek?*/
+SELECT
+  a.Vezetéknév,
+  a.Beosztás,
+  a.SzületésiDátum
+FROM alkalmazottak a
+WHERE a.Beosztás = 'üzletkötõ'
+AND a.SzületésiDátum < ANY (SELECT
+    a.SzületésiDátum
+  FROM alkalmazottak a
+  WHERE a.Beosztás LIKE '%igazgató%'
+  OR a.Beosztás LIKE '%alelnök%');
 
 
 
